@@ -18,7 +18,7 @@ def build_graph(values):
 
 ### Version 1: Forecast from query-string request
 @app.route('/forecastv1/<int:store_number>/<int:item_number>/<initial_date>/<final_date>')
-def forecast_web(store_number, item_number, initial_date, final_date):
+def forecastv1(store_number, item_number, initial_date, final_date):
 
     date_range = pd.date_range(pd.to_datetime(initial_date), pd.to_datetime(final_date))
     point_forecast = np.random.randint(low=15, high=30, size=len(date_range))
@@ -32,11 +32,11 @@ def forecast_web(store_number, item_number, initial_date, final_date):
 
 ### Version 2: Forecast from submitted form
 @app.route('/forecastv2/request')
-def student():
+def forecastv2request():
    return render_template('forecastv2request.html')
 
 @app.route('/forecastv2/result',methods = ['POST', 'GET'])
-def result():
+def forecastv2result():
    if request.method == 'POST':
 
       store_number = request.form['Store']
