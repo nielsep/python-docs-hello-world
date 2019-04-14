@@ -1,11 +1,63 @@
-﻿<html>
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Reusable Form Demo</title>
+    <link rel="stylesheet" media="screen" href="static/bootstrap.min.css">
+    <link rel="stylesheet" href="static/bootstrap-theme.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+</head>
+
 <body>
-    <form action="http://127.0.0.1:5000/forecastv2/result" method="POST">
-        <p>Store Number <input type="text" name="Store" /></p>
-        <p>Item Number<input type="text" name="Item" /></p>
-        <p>Inital Date <input type="text" name="InitialDate" /></p>
-        <p>Final Date <input type="text" name="FinalDate" /></p>
-        <p><input type="submit" value="submit" /></p>
-    </form>
+
+    <div class="container">
+        <h2>Sales Demand Forecasting Application Form</h2>
+
+        <form action="http://127.0.0.1:5000/result" method="POST" role="form">
+            {{ form.csrf }}
+            <div class="form-group">
+                <label for="store_number">Store Number:</label>
+                <input type="text" class="form-control" id="store_number" name="store_number" placeholder="What is the store number? Example: 3305">
+                <br>
+                <label for="item_number">Item Number:</label>
+                <input type="text" class="form-control" id="item_number" name="item_number" placeholder="What is the store number? Example: 011096091, for Doubled Smoked Bacon breakfast sandwich">
+                <br>
+                <label for="initial_date">Inital Date:</label>
+                <input type="text" class="form-control" id="initial_date" name="initial_date" placeholder="First day of the forecast period yyyy-mm-dd. Example: 2018-02-01">
+                <br>
+                <label for="final_date">Final Date:</label>
+                <input type="text" class="form-control" id="final_date" name="final_date" placeholder="Last day of the forecast period yyyy-mm-dd. Example: 2018-02-10">
+                <br>
+                <label for="frequency">Frequency:</label>
+                <input type="text" class="form-control" id="frequency" name="frequency" placeholder="Forecast time granularity. Examples: D for daily, H for hourly">
+            </div>
+            <button type="submit" class="btn btn-success">Submit</button>
+        </form>
+
+        <br>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+
+        {% for message in messages %}
+        {% if "Error" not in message[1]: %}
+        <div class="alert alert-info">
+            <strong>Success! </strong> {{ message[1] }}
+        </div>
+        {% endif %}
+
+        {% if "Error" in message[1]: %}
+        <div class="alert alert-warning">
+            {{ message[1] }}
+        </div>
+        {% endif %}
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+    </div>
+    <br>
+    </div>
+    </div>
 </body>
 </html>
