@@ -16,7 +16,7 @@ class ReusableForm(Form):
     item_number = TextField('Item Number:', validators=[validators.required(), validators.Length(min=3, max=35)])
     initial_date = TextField('Inital Date:', validators=[validators.required(), validators.Length(min=3, max=35)])
     final_date = TextField('Final Date:', validators=[validators.required(), validators.Length(min=3, max=35)])
-    frquency = TextField('Frequency:', validators=[validators.required(), validators.Length(min=3, max=35)])
+    frequency = TextField('Frequency:', validators=[validators.required(), validators.Length(min=3, max=35)])
 
 def build_dist_graph_final(df):
 
