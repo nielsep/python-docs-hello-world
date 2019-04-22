@@ -14,7 +14,7 @@
     <div class="container">
         <h2>Sales Demand Forecasting Application Form</h2>
 
-        <form action="https://stilltesting.azurewebsites.net/result" method="POST" role="form">
+        <form action="http://127.0.0.1:5000/result" method="POST" role="form">
             {{ form.csrf }}
             <div class="form-group">
                 <label for="store_number">Store Number:</label>
@@ -30,7 +30,12 @@
                 <input type="text" class="form-control" id="final_date" name="final_date" placeholder="Last day of the forecast period yyyy-mm-dd. Example: 2018-02-10">
                 <br>
                 <label for="frequency">Frequency:</label>
-                <input type="text" class="form-control" id="frequency" name="frequency" placeholder="Forecast time granularity. Examples: D for daily, H for hourly">
+                <select class="form-control" id="frequency" name="frequency">
+                    <option value="M">Monthly</option>
+                    <option value="W">Weekly</option>
+                    <option value="D">Daily</option>
+                    <option value="H">Hourly</option>
+                </select>
             </div>
             <button type="submit" class="btn btn-success">Submit</button>
         </form>
