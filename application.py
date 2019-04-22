@@ -10,7 +10,6 @@ import io
 import base64
 
 app = Flask(__name__)
-#bootstrap = Bootstrap(app)
 
 class ReusableForm(Form):
     store_number = TextField('Store Number:', validators=[validators.required()])
@@ -24,8 +23,9 @@ def build_dist_graph_final(df):
     img = io.BytesIO(); plt.style.use('seaborn-darkgrid'); fig, ax = plt.subplots();
     column_list = ['Q_05', 'Q_25', 'Q_50','Q_75', 'Q_95']
     for column in column_list:
-        plt.plot(df['DATE'], df[column], marker='', color='grey', linewidth=2, alpha=0.4)
-    plt.plot(df['DATE'], df['Q_50'], marker='', color='orange', linewidth=4, alpha=0.7)
+        plt.plot(pd.to_datetime(df['DATE']), df[column], marker='', color='grey', linewidth=2, alpha=0.4)
+    plt.plot(df['DATE'], df['Q_50'], marker='', color='green', linewidth=4, alpha=0.7)
+    plt.xticks(rotation=45)
     plt.xlabel("Time"); plt.ylabel("Sales")
     plt.savefig(img, format='png'); img.seek(0)
     graph_url = base64.b64encode(img.getvalue()).decode(); plt.close()
@@ -93,7 +93,7 @@ def forecastv2result():
 
       graph1_url = build_dist_graph_final(forecast_model_results)
 
-   return render_template("forecastv2result.html",  data=forecast_model_results.to_html(), graph1=graph1_url)
+   return render_template("forecastv2result.html",  data=forecast_model_results.to_html(col_space=500,justify='center',index=False), graph1=graph1_url)
 
 ###################################################
 ### Version 3: Forecast API returning json file
@@ -112,6 +112,3 @@ def forecast_api(store_number, item_number, initial_date, final_date):
 
 
     return forecast_model_results.to_json(orient='index')
-
-###################################################################################################
-###################################################################################################
