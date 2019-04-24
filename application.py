@@ -18,13 +18,16 @@ class ReusableForm(Form):
     final_date = TextField('Final Date:', validators=[validators.required(), validators.Length(min=3, max=35)])
     frequency = TextField('Frequency:', validators=[validators.required(), validators.Length(min=3, max=35)])
 
-def build_dist_graph_final(df):
+def build_dist_graph_final(df, quantile):
 
     img = io.BytesIO(); plt.style.use('seaborn-darkgrid'); fig, ax = plt.subplots();
-    column_list = ['Q_05', 'Q_25', 'Q_50','Q_75', 'Q_95']
-    for column in column_list:
-        plt.plot(pd.to_datetime(df['DATE']), df[column], marker='', color='grey', linewidth=2, alpha=0.4)
-    plt.plot(df['DATE'], df['Q_50'], marker='', color='green', linewidth=4, alpha=0.7)
+    if quantile == 'M':
+        column_list = ['Q_05', 'Q_25', 'Q_50','Q_75', 'Q_95']
+        for column in column_list:
+            plt.plot(pd.to_datetime(df['DATE']).apply(lambda x: x.strftime('%d-%m-%y')).astype(str), df[column], marker='', color='grey', linewidth=2, alpha=0.4)
+        plt.plot(df['DATE'].apply(lambda x: x.strftime('%d-%m-%y')).astype(str), df['Q_50'], marker='', color='green', linewidth=4, alpha=0.7)
+    else:
+        plt.plot(df['DATE'].apply(lambda x: x.strftime('%d-%m-%y')).astype(str), df['POINT_FORECAST'], marker='', color='green', linewidth=4, alpha=0.7)
     plt.xticks(rotation=45)
     plt.xlabel("Time"); plt.ylabel("Sales")
     plt.savefig(img, format='png'); img.seek(0)
@@ -32,25 +35,9 @@ def build_dist_graph_final(df):
 
     return 'data:image/png;base64,{}'.format(graph_url)
 
-###################################################
-### Version 1: Forecast from query-string request
-###################################################
-
-@app.route('/forecastv1/<int:store_number>/<int:item_number>/<initial_date>/<final_date>/')
-def forecastv1(store_number, item_number, initial_date, final_date):
-
-    date_range = pd.date_range(pd.to_datetime(initial_date), pd.to_datetime(final_date))
-    point_forecast = np.random.randint(low=15, high=30, size=len(date_range))
-    graph1_url = build_dist_graph_final(point_forecast)
-
-    forecast_model_results = pd.DataFrame({'STORE' : store_number, 'ITEM' : item_number, 'DATE' : date_range,\
-                                           'MODEL' : 'Facebook Prophet',
-                                           'POINT_FORECAST' : point_forecast})
-
-    return render_template("forecastv1.html",  data=forecast_model_results.to_html(), graph1=graph1_url)
 
 ###################################################
-### Version 2: Forecast from submitted form
+### Version 1: Forecast from submitted form
 ###################################################
 
 @app.route('/',methods = ['POST', 'GET'])
@@ -78,6 +65,7 @@ def forecastv2result():
       initial_date = request.form['initial_date']
       final_date = request.form['final_date']
       frequency = request.form['frequency']
+      quantile = request.form['quantile']
 
       date_range = pd.date_range(pd.to_datetime(initial_date), pd.to_datetime(final_date), freq=frequency)
       point_forecast = np.random.randint(low=15, high=30, size=len(date_range))
@@ -87,28 +75,38 @@ def forecastv2result():
       q75_forecast = np.round(norm.ppf(0.75, loc=point_forecast, scale=2),2)
       q95_forecast = np.round(norm.ppf(0.95, loc=point_forecast, scale=2),2)
 
-      forecast_model_results = pd.DataFrame({'STORE' : store_number, 'ITEM' : item_number, 'DATE' : date_range,\
+      if quantile == 'M':
+        forecast_model_results = pd.DataFrame({'STORE' : store_number, 'ITEM' : item_number, 'DATE' : date_range,\
                                              'Q_05' : q05_forecast, 'Q_25' : q25_forecast, 'Q_50' : q50_forecast, \
                                              'Q_75' : q75_forecast, 'Q_95' : q95_forecast})
+      else:
+        forecast_model_results = pd.DataFrame({'STORE' : store_number, 'ITEM' : item_number, 'DATE' : date_range, 'POINT_FORECAST' : point_forecast})
 
-      graph1_url = build_dist_graph_final(forecast_model_results)
+
+      graph1_url = build_dist_graph_final(forecast_model_results, quantile)
 
    return render_template("forecastv2result.html",  data=forecast_model_results.to_html(col_space=500,justify='center',index=False), graph1=graph1_url)
 
 ###################################################
-### Version 3: Forecast API returning json file
+### Version 2: Forecast API returning json file
 ###################################################
 
-@app.route('/API/forecast/<int:store_number>/<int:item_number>/<initial_date>/<final_date>')
-def forecast_api(store_number, item_number, initial_date, final_date):
+@app.route('/API/forecast/<int:store_number>/<int:item_number>/<initial_date>/<final_date>/<frequency>/<quantile>')
+def forecast_api(store_number, item_number, initial_date, final_date, frequency, quantile):
 
-    date_range = pd.date_range(pd.to_datetime(initial_date), pd.to_datetime(final_date))
+    date_range = pd.date_range(pd.to_datetime(initial_date), pd.to_datetime(final_date), freq=frequency)
     point_forecast = np.random.randint(low=15, high=30, size=len(date_range))
+    q05_forecast = np.round(norm.ppf(0.05, loc=point_forecast, scale=2),2)
+    q25_forecast = np.round(norm.ppf(0.25, loc=point_forecast, scale=2),2)
+    q50_forecast = np.round(norm.ppf(0.50, loc=point_forecast, scale=2),2)
+    q75_forecast = np.round(norm.ppf(0.75, loc=point_forecast, scale=2),2)
+    q95_forecast = np.round(norm.ppf(0.95, loc=point_forecast, scale=2),2)
 
-    forecast_model_results = pd.DataFrame({'STORE' : store_number, 'ITEM' : item_number, 'DATE' : date_range,\
-                                           'MODEL' : 'Facebook Prophet',
-                                           'POINT_FORECAST' : point_forecast})
-
-
+    if quantile == 'M':
+        forecast_model_results = pd.DataFrame({'STORE' : store_number, 'ITEM' : item_number, 'DATE' : date_range.astype(str),\
+                                             'Q_05' : q05_forecast, 'Q_25' : q25_forecast, 'Q_50' : q50_forecast, \
+                                             'Q_75' : q75_forecast, 'Q_95' : q95_forecast})
+    else:
+        forecast_model_results = pd.DataFrame({'STORE' : store_number, 'ITEM' : item_number, 'DATE' : date_range.astype(str), 'POINT_FORECAST' : point_forecast})
 
     return forecast_model_results.to_json(orient='index')
