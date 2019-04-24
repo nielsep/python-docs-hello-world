@@ -14,7 +14,7 @@
     <div class="container">
         <h2>Sales Demand Forecasting Application Form</h2>
 
-        <form action="http://aaforecast.trafficmanager.net/result" method="POST" role="form">
+        <form action="http://127.0.0.1:5000/result" method="POST" role="form">
             {{ form.csrf }}
             <div class="form-group">
                 <label for="store_number">Store Number:</label>
@@ -35,6 +35,15 @@
                     <option value="W">Weekly</option>
                     <option value="D">Daily</option>
                     <option value="H">Hourly</option>
+                </select>
+                <br>
+                <label for="quantile">Quantile:</label>
+                <select class="form-control" id="quantile" name="quantile">
+                    <option value="P">Point Forecast</option>
+                    <option value="U">Upper Quantiles</option>
+                    <option value="L">Lower Quantiles</option>
+                    <option value="M">Main Quantiles</option>
+                    <option value="F">Full Distribution</option>
                 </select>
             </div>
             <button type="submit" class="btn btn-success">Submit</button>
